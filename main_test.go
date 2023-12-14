@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"go-api/database"
+	"go-api/handlers"
+	"go-api/models"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -20,13 +22,13 @@ func TestHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 
-	handlerFunction(w, req)
+	handlers.HandlerFunction(w, req)
 
 	if status := w.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 
-	var responseArray []GameLog
+	var responseArray []models.GameLog
 	if err := json.NewDecoder(w.Body).Decode(&responseArray); err != nil {
 		t.Errorf("error decoding response body: %v", err)
 	}
@@ -36,7 +38,7 @@ func TestHandler(t *testing.T) {
 	}
 	responseStruct := responseArray[0]
 
-	expected := GameLog{
+	expected := models.GameLog{
 		ID:     1,
 		Date:   time.Date(2023, 12, 13, 12, 0, 0, 0, time.UTC),
 		Game:   "Nemesis",
