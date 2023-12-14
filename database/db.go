@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"log"
+	"os"
+	"path/filepath"
 )
 
 var DB *sql.DB
@@ -15,29 +17,18 @@ func InitDB() error {
 		log.Fatalf("Failed to open database: %v", err)
 	}
 
-	query := `
-		  DROP TABLE gamelogs;
-			CREATE TABLE gamelogs (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				date DATETIME,
-				game TEXT,
-				winner TEXT
-			);
-		`
+	cwd, _ := os.Getwd()
+	filePath := filepath.Join(cwd, "database/seed.sql")
 
-	_, err = db.Exec(query)
+	queryBytes, err := os.ReadFile(filePath)
 	if err != nil {
-		log.Fatalf("Failed to create table: %v", err)
+		log.Fatalf("Failed to open seed file: %v", err)
 	}
 
-	add_query := `
-		INSERT INTO gamelogs (date, game, winner)
-		VALUES ('2023-12-13 12:00:00', 'Nemesis', 'Laura')
-	`
+	query := string(queryBytes)
 
-	_, err = db.Exec(add_query)
-	if err != nil {
-		log.Fatalf("Failed to add row: %v", err)
+	if _, err := db.Exec(query); err != nil {
+		log.Fatalf("Failed to execute query: %v", err)
 	}
 
 	DB = db
