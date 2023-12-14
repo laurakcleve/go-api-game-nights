@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func HandlerFunction(w http.ResponseWriter, r *http.Request) {
+func GetAllPlayedGames(w http.ResponseWriter, r *http.Request) {
 	rows, err := database.DB.Query("SELECT * FROM played_game")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Database query error: %v", err), http.StatusInternalServerError)
@@ -38,5 +38,68 @@ func HandlerFunction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, fmt.Sprintf("JSON encoding error, %v", err), http.StatusInternalServerError)
 	}
+}
 
+func GetAllGames(w http.ResponseWriter, r *http.Request) {
+	rows, err := database.DB.Query("SELECT * FROM game")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Database query error: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	var games []models.Game
+	for rows.Next() {
+		var game models.Game
+		if err := rows.Scan(&game.ID, &game.Name); err != nil {
+			http.Error(w, fmt.Sprintf("Database scan error: %v", err), http.StatusInternalServerError)
+			return
+		}
+		games = append(games, game)
+	}
+
+	if err = rows.Err(); err != nil {
+		http.Error(w, fmt.Sprintf("Database rows error: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	err = json.NewEncoder(w).Encode(games)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("JSON encoding error, %v", err), http.StatusInternalServerError)
+	}
+}
+
+func GetAllPlayers(w http.ResponseWriter, r *http.Request) {
+	rows, err := database.DB.Query("SELECT * FROM player")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Database query error: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	defer rows.Close()
+
+	var players []models.Player
+	for rows.Next() {
+		var player models.Player
+		if err := rows.Scan(&player.ID, &player.Name); err != nil {
+			http.Error(w, fmt.Sprintf("Database scan error: %v", err), http.StatusInternalServerError)
+			return
+		}
+		players = append(players, player)
+	}
+
+	if err = rows.Err(); err != nil {
+		http.Error(w, fmt.Sprintf("Database rows error: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	err = json.NewEncoder(w).Encode(players)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("JSON encoding error, %v", err), http.StatusInternalServerError)
+	}
 }

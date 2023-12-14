@@ -18,11 +18,11 @@ func init() {
 	}
 }
 
-func TestHandler(t *testing.T) {
+func TestGetAllPlayedGames(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 
-	handlers.HandlerFunction(w, req)
+	handlers.GetAllPlayedGames(w, req)
 
 	if status := w.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
@@ -60,5 +60,72 @@ func TestHandler(t *testing.T) {
 	if responseStruct.WinnerID != expected.WinnerID {
 		t.Errorf("unexpected value for Winner: got %v want %v", responseStruct.WinnerID, expected.WinnerID)
 	}
+}
 
+func TestGetAllGames(t *testing.T) {
+	req := httptest.NewRequest("GET", "/games", nil)
+	w := httptest.NewRecorder()
+
+	handlers.GetAllGames(w, req)
+
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	var responseArray []models.Game
+	if err := json.NewDecoder(w.Body).Decode(&responseArray); err != nil {
+		t.Errorf("error decoding response body: %v", err)
+	}
+
+	if len(responseArray) != 3 {
+		t.Errorf("unexpected number of elements in the array: got %v want %v", len(responseArray), 3)
+	}
+	responseStruct := responseArray[0]
+
+	expected := models.Game{
+		ID:   1,
+		Name: "Nemesis",
+	}
+
+	if responseStruct.ID != expected.ID {
+		t.Errorf("unexpected value for ID: got %v want %v", responseStruct.ID, expected.ID)
+	}
+
+	if responseStruct.Name != expected.Name {
+		t.Errorf("unexpected value for Name: got %v want %v", responseStruct.Name, expected.Name)
+	}
+}
+
+func TestGetAllPlayers(t *testing.T) {
+	req := httptest.NewRequest("GET", "/players", nil)
+	w := httptest.NewRecorder()
+
+	handlers.GetAllPlayers(w, req)
+
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	var responseArray []models.Player
+	if err := json.NewDecoder(w.Body).Decode(&responseArray); err != nil {
+		t.Errorf("error decoding response body: %v", err)
+	}
+
+	if len(responseArray) != 3 {
+		t.Errorf("unexpected number of elements in the array: got %v want %v", len(responseArray), 3)
+	}
+	responseStruct := responseArray[0]
+
+	expected := models.Player{
+		ID:   1,
+		Name: "Jimmy",
+	}
+
+	if responseStruct.ID != expected.ID {
+		t.Errorf("unexpected value for ID: got %v want %v", responseStruct.ID, expected.ID)
+	}
+
+	if responseStruct.Name != expected.Name {
+		t.Errorf("unexpected value for Name: got %v want %v", responseStruct.Name, expected.Name)
+	}
 }
