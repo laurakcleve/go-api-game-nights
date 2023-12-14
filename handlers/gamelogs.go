@@ -9,7 +9,7 @@ import (
 )
 
 func HandlerFunction(w http.ResponseWriter, r *http.Request) {
-	rows, err := database.DB.Query("SELECT * FROM gamelogs")
+	rows, err := database.DB.Query("SELECT * FROM played_game")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Database query error: %v", err), http.StatusInternalServerError)
 		return
@@ -17,10 +17,10 @@ func HandlerFunction(w http.ResponseWriter, r *http.Request) {
 
 	defer rows.Close()
 
-	var logs []models.GameLog
+	var logs []models.PlayedGame
 	for rows.Next() {
-		var log models.GameLog
-		if err := rows.Scan(&log.ID, &log.Date, &log.Game, &log.Winner); err != nil {
+		var log models.PlayedGame
+		if err := rows.Scan(&log.ID, &log.Date, &log.GameID, &log.WinnerID); err != nil {
 			http.Error(w, fmt.Sprintf("Database scan error: %v", err), http.StatusInternalServerError)
 			return
 		}

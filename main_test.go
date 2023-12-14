@@ -28,21 +28,21 @@ func TestHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 
-	var responseArray []models.GameLog
+	var responseArray []models.PlayedGame
 	if err := json.NewDecoder(w.Body).Decode(&responseArray); err != nil {
 		t.Errorf("error decoding response body: %v", err)
 	}
 
-	if len(responseArray) != 1 {
-		t.Errorf("unexpected number of elements in the array: got %v want %v", len(responseArray), 1)
+	if len(responseArray) != 3 {
+		t.Errorf("unexpected number of elements in the array: got %v want %v", len(responseArray), 3)
 	}
 	responseStruct := responseArray[0]
 
-	expected := models.GameLog{
-		ID:     1,
-		Date:   time.Date(2023, 12, 13, 12, 0, 0, 0, time.UTC),
-		Game:   "Nemesis",
-		Winner: "Laura",
+	expected := models.PlayedGame{
+		ID:       1,
+		Date:     time.Date(2023, 12, 13, 12, 0, 0, 0, time.UTC),
+		GameID:   1,
+		WinnerID: 2,
 	}
 
 	if responseStruct.ID != expected.ID {
@@ -53,12 +53,12 @@ func TestHandler(t *testing.T) {
 		t.Errorf("unexpected value for Date: got %v want %v", responseStruct.Date, expected.Date)
 	}
 
-	if responseStruct.Game != expected.Game {
-		t.Errorf("unexpected value for Game: got %v want %v", responseStruct.Game, expected.Game)
+	if responseStruct.GameID != expected.GameID {
+		t.Errorf("unexpected value for Game: got %v want %v", responseStruct.GameID, expected.GameID)
 	}
 
-	if responseStruct.Winner != expected.Winner {
-		t.Errorf("unexpected value for Winner: got %v want %v", responseStruct.Winner, expected.Winner)
+	if responseStruct.WinnerID != expected.WinnerID {
+		t.Errorf("unexpected value for Winner: got %v want %v", responseStruct.WinnerID, expected.WinnerID)
 	}
 
 }
