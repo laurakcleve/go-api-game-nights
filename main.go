@@ -1,87 +1,25 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
+	"go-api/database"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type GameLog struct {
-	ID      int
-	Date    time.Time
-	Game    string
-	Players string
-	Winner  string
-}
-
-var db *sql.DB
-var once sync.Once
-var dbInit sync.WaitGroup
-
-func initDB() (*sql.DB, error) {
-	fmt.Print(db)
-
-	const file string = "gamelogs.db"
-
-	db, err := sql.Open("sqlite3", file)
-	if err != nil {
-		log.Fatalf("Failed to open database: %v", err)
-	}
-
-	query := `
-		  DROP TABLE gamelogs;
-			CREATE TABLE gamelogs (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				date DATETIME,
-				game TEXT,
-				winner TEXT
-			);
-		`
-
-	_, err = db.Exec(query)
-	if err != nil {
-		log.Fatalf("Failed to create table: %v", err)
-	}
-
-	add_query := `
-		INSERT INTO gamelogs (date, game, winner)
-		VALUES ('2023-12-13 12:00:00', 'Nemesis', 'Laura')
-	`
-
-	_, err = db.Exec(add_query)
-	if err != nil {
-		log.Fatalf("Failed to add row: %v", err)
-	}
-
-	return db, nil
-}
-
-func GetDB() (*sql.DB, error) {
-	var err error
-	once.Do(func() {
-		dbInit.Add(1)
-		go func() {
-			db, err = initDB()
-			if err != nil {
-				log.Fatalf("Database init error: %v", err)
-				return
-			}
-			dbInit.Done()
-		}()
-	})
-
-	dbInit.Wait()
-	return db, err
+	ID     int
+	Date   time.Time
+	Game   string
+	Winner string
 }
 
 func handlerFunction(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT * FROM gamelogs")
+	rows, err := database.DB.Query("SELECT * FROM gamelogs")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Database query error: %v", err), http.StatusInternalServerError)
 		return
@@ -114,17 +52,12 @@ func handlerFunction(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	var err error
-	db, err = GetDB()
-	if err != nil {
-		log.Fatal("Failed to initialize the database: ", err)
-		return
-	}
+	database.InitDB()
 
 	http.HandleFunc("/", handlerFunction)
 
 	log.Println("Starting server on :8080")
-	err = http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
