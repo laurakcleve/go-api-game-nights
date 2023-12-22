@@ -1,12 +1,16 @@
 package models
 
-import "time"
-
 type PlayedGame struct {
-	ID       int       `json:"id"`
-	Date     time.Time `json:"date"`
-	GameID   int       `json:"game_id"`
-	WinnerID int       `json:"winner_id"`
+	ID       int    `json:"id"`
+	Date     string `json:"date"`
+	GameID   int    `json:"game_id"`
+	WinnerID int    `json:"winner_id"`
+}
+
+type PlayedGameInput struct {
+	Date     string `json:"date"`
+	GameID   int    `json:"game_id"`
+	WinnerID int    `json:"winner_id"`
 }
 
 type Game struct {

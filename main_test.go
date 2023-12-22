@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 )
 
 func init() {
@@ -40,7 +39,7 @@ func TestGetAllPlayedGames(t *testing.T) {
 
 	expected := models.PlayedGame{
 		ID:       1,
-		Date:     time.Date(2023, 12, 13, 12, 0, 0, 0, time.UTC),
+		Date:     "2023-12-13T12:00:00Z",
 		GameID:   1,
 		WinnerID: 2,
 	}
@@ -49,7 +48,7 @@ func TestGetAllPlayedGames(t *testing.T) {
 		t.Errorf("unexpected value for ID: got %v want %v", responseStruct.ID, expected.ID)
 	}
 
-	if !responseStruct.Date.Equal(expected.Date) {
+	if responseStruct.Date != expected.Date {
 		t.Errorf("unexpected value for Date: got %v want %v", responseStruct.Date, expected.Date)
 	}
 
