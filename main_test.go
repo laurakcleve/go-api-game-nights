@@ -8,7 +8,11 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 func init() {
@@ -17,11 +21,22 @@ func init() {
 	}
 }
 
-func TestGetAllPlayedGames(t *testing.T) {
-	req := httptest.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
+func setupRouter() *gin.Engine {
+	router := gin.Default()
 
-	handlers.GetAllPlayedGames(w, req)
+	router.GET("/", handlers.GetAllPlayedGames)
+	router.POST("/", handlers.AddPlayedGame)
+	router.GET("/games", handlers.GetAllGames)
+	router.GET("/players", handlers.GetAllPlayers)
+
+	return router
+}
+
+func TestGetAllPlayedGames(t *testing.T) {
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/", nil)
+	router.ServeHTTP(w, req)
 
 	if status := w.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
@@ -39,7 +54,7 @@ func TestGetAllPlayedGames(t *testing.T) {
 
 	expected := models.PlayedGame{
 		ID:       1,
-		Date:     "2023-12-13T12:00:00Z",
+		Date:     "2023-12-13 12:00:00",
 		GameID:   1,
 		WinnerID: 2,
 	}
@@ -62,10 +77,10 @@ func TestGetAllPlayedGames(t *testing.T) {
 }
 
 func TestGetAllGames(t *testing.T) {
-	req := httptest.NewRequest("GET", "/games", nil)
+	router := setupRouter()
 	w := httptest.NewRecorder()
-
-	handlers.GetAllGames(w, req)
+	req := httptest.NewRequest("GET", "/games", nil)
+	router.ServeHTTP(w, req)
 
 	if status := w.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
@@ -96,10 +111,10 @@ func TestGetAllGames(t *testing.T) {
 }
 
 func TestGetAllPlayers(t *testing.T) {
-	req := httptest.NewRequest("GET", "/players", nil)
+	router := setupRouter()
 	w := httptest.NewRecorder()
-
-	handlers.GetAllPlayers(w, req)
+	req := httptest.NewRequest("GET", "/players", nil)
+	router.ServeHTTP(w, req)
 
 	if status := w.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
@@ -126,5 +141,36 @@ func TestGetAllPlayers(t *testing.T) {
 
 	if responseStruct.Name != expected.Name {
 		t.Errorf("unexpected value for Name: got %v want %v", responseStruct.Name, expected.Name)
+	}
+}
+
+func TestAddPlayedGame(t *testing.T) {
+	router := setupRouter()
+	w := httptest.NewRecorder()
+	reqBody := "date=2023-12-12T12:00:00-07:00&game_id=1&winner_id=1"
+	req, _ := http.NewRequest("POST", "/", strings.NewReader(reqBody))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	router.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	var playedGame models.PlayedGame
+	err := json.Unmarshal(w.Body.Bytes(), &playedGame)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal response: %v", err)
+	}
+
+	expected := models.PlayedGame{
+		Date:     "2023-12-12T12:00:00-07:00",
+		GameID:   1,
+		WinnerID: 1,
+	}
+
+	expected.ID = playedGame.ID
+
+	if !reflect.DeepEqual(expected, playedGame) {
+		t.Errorf("handler returned unexpected body: got %v want %v", playedGame, expected)
 	}
 }
