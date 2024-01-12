@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -53,7 +54,7 @@ func TestGetAllPlayedGames(t *testing.T) {
 
 	expected := models.PlayedGame{
 		ID:       1,
-		Date:     "2023-12-13T12:00:00Z",
+		Date:     "2023-12-13 12:00:00",
 		GameID:   1,
 		WinnerID: 2,
 	}
@@ -153,5 +154,23 @@ func TestAddPlayedGame(t *testing.T) {
 
 	if status := w.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+
+	var playedGame models.PlayedGame
+	err := json.Unmarshal(w.Body.Bytes(), &playedGame)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal response: %v", err)
+	}
+
+	expected := models.PlayedGame{
+		Date:     "2023-12-12T12:00:00-07:00",
+		GameID:   1,
+		WinnerID: 1,
+	}
+
+	expected.ID = playedGame.ID
+
+	if !reflect.DeepEqual(expected, playedGame) {
+		t.Errorf("handler returned unexpected body: got %v want %v", playedGame, expected)
 	}
 }

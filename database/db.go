@@ -1,34 +1,43 @@
 package database
 
 import (
-	"database/sql"
+	"go-api/models"
 	"log"
-	"os"
-	"path/filepath"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-var DB *sql.DB
+var DB *gorm.DB
 
 func InitDB() error {
 	const file string = "gamelogs.db"
 
-	db, err := sql.Open("sqlite3", file)
+	db, err := gorm.Open(sqlite.Open(file), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to open database: %v", err)
 	}
 
-	cwd, _ := os.Getwd()
-	filePath := filepath.Join(cwd, "database/seed.sql")
-
-	queryBytes, err := os.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("Failed to open seed file: %v", err)
+	if err := db.Migrator().DropTable(
+		&models.PlayedGame{},
+		&models.Game{},
+		&models.Player{},
+		&models.PlayedGamePlayer{}); err != nil {
+		log.Fatalf("Failed to drop tables: %v", err)
 	}
 
-	query := string(queryBytes)
+	err = db.AutoMigrate(
+		&models.PlayedGame{},
+		&models.Game{},
+		&models.Player{},
+		&models.PlayedGamePlayer{})
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
 
-	if _, err := db.Exec(query); err != nil {
-		log.Fatalf("Failed to execute query: %v", err)
+	err = Seed(db)
+	if err != nil {
+		log.Fatalf("Failed to seed database: %v", err)
 	}
 
 	DB = db
